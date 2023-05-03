@@ -5,13 +5,17 @@ class TodolistsController < ApplicationController
 
   def create
     list = List.new(list_params)
-    list.score = Language.get_data(list_params[:body])
     list.save
-    tags = Vision.get_image_data(list.image)
-    tags.each do |tag|
-      list.tags.create(name: tag)
+    score = Language.get_data(list_params[:body])
+    data = Vision.get_image_data(list.image)
+    p data
+    if data.value?("LIKELY") || data.value?("VERY_LIKELY")
+      list.image.purge
+      list.destroy
+      redirect_to todolists_new_path
+    else
+      redirect_to todolist_path(list.id)
     end
-    redirect_to todolist_path(list.id)
   end
 
   def index
